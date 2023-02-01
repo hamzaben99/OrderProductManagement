@@ -9,6 +9,8 @@ public class TwilioConfiguration {
     private String sid;
     private String token;
     private String number;
+    private boolean active;
+    private String countryCode;
 
     public TwilioConfiguration(){}
 
@@ -34,5 +36,21 @@ public class TwilioConfiguration {
 
     public void setNumber(String number) {
         this.number = number;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
+    }
+
+    public String getCountryCode() {
+        return countryCode;
+    }
+
+    public void setCountryCode(String countryCode) {
+        this.countryCode = countryCode;
     }
 }

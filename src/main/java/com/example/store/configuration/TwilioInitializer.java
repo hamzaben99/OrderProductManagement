@@ -10,10 +10,12 @@ public class TwilioInitializer {
 
     @Autowired
     public TwilioInitializer(TwilioConfiguration twilioConfig) {
-        this.twilioConfig = twilioConfig;
-        Twilio.init(
-                twilioConfig.getSid(),
-                twilioConfig.getToken()
-        );
+        if (twilioConfig.isActive()) {
+            this.twilioConfig = twilioConfig;
+            Twilio.init(
+                    twilioConfig.getSid(),
+                    twilioConfig.getToken()
+            );
+        }
     }
 }

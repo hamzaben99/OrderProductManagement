@@ -28,8 +28,6 @@ import java.util.concurrent.Executors;
 
 @Service
 public class OrderService {
-    private static final String EMAIL_REGEX = "^(?=.{1,64}@)[A-Za-z0-9_-]+(\\.[A-Za-z0-9_-]+)*@[^-][A-Za-z0-9-]+(\\.[A-Za-z0-9-]+)*(\\.[A-Za-z]{2,})$";
-    private static final String PHONE_NUMBER_REGEX = "^[\\+]?[(]?[0-9]{3}[)]?[-\\s\\.]?[0-9]{3}[-\\s\\.]?[0-9]{4,6}$";
     @Autowired
     private OrderRepository orderRepository;
     @Autowired
@@ -84,8 +82,9 @@ public class OrderService {
     }
 
     public List<OrderDtoComplete> getOrdersByClientPhoneNumber(String phoneNumber) {
+        String validPhoneNumber = smsSenderService.formatPhoneNumber(phoneNumber);
         return orderRepository
-                .findByClient_PhoneNumber(phoneNumber)
+                .findByClient_PhoneNumber(validPhoneNumber)
                 .stream()
                 .map(order -> orderDtoMapper.mapEntityToDto(order))
                 .toList();
@@ -129,10 +128,8 @@ public class OrderService {
     @Transactional
     public OrderDtoComplete addOrder(OrderDto order, boolean isPreorder) {
         // Checking phone number and email pattern
-        if (order.getClientDto().getEmailAddress() != null && !order.getClientDto().getEmailAddress().matches(EMAIL_REGEX))
-            throw new IllegalArgumentException("Invalid Email Address");
-        if (!order.getClientDto().getPhoneNumber().replace(" ", "").matches(PHONE_NUMBER_REGEX))
-            throw new IllegalArgumentException("Invalid Phone Number");
+        emailSenderService.checkEmail(order.getClientDto().getEmailAddress());
+        order.getClientDto().setPhoneNumber(smsSenderService.formatPhoneNumber(order.getClientDto().getPhoneNumber()));
 
         Order orderEntity = orderDtoMapper.mapDtoToEntity(order, isPreorder);
         Set<ProductOrder> productOrders = new HashSet<>();
@@ -193,7 +190,7 @@ public class OrderService {
         order.setValidated(true);
         Order updatedOrder = orderRepository.save(order);
         // Send Mail or SMS to client
-        ExecutorService executor = null;
+        ExecutorService executor;
         if (order.getClient().getEmailAddress() == null) {
             executor = Executors.newSingleThreadExecutor();
             executor.execute(() -> smsSenderService.sendSms(order));
@@ -218,7 +215,9 @@ public class OrderService {
             order.setValidated(true);
             updatedOrders.add(orderRepository.save(order));
             // Sending mail and sms in parallel
-            executor.execute(() -> emailSenderService.sendEmail(order));
+            if (order.getClient().getEmailAddress() != null) {
+                executor.execute(() -> emailSenderService.sendEmail(order));
+            }
             executor.execute(() -> smsSenderService.sendSms(order));
         }
         executor.shutdown();
@@ -229,7 +228,7 @@ public class OrderService {
     public OrderDtoComplete updateOrderClient(Long id, ClientDto client) {
         Order order = orderRepository.findById(id).orElseThrow(() -> new NoSuchOrderException("Order " + id + " doesn't exist"));
         order.setClient(clientDtoMapper.mapDtoToEntity(client));
-        Order updatedOrder = orderRepository.save(order);
+        Order updatedOrder = orderRepository.save(order); //todo:
         return orderDtoMapper.mapEntityToDto(updatedOrder);
     }
 

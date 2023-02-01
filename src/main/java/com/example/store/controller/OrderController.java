@@ -21,7 +21,7 @@ public class OrderController {
     @Autowired
     private OrderService orderService;
 
-    @GetMapping(value = "api/orders/")
+    @GetMapping(value = "api/orders")
     public List<OrderDtoComplete> getOrders() {
         return orderService.getOrders();
     }

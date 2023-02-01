@@ -14,11 +14,11 @@ import java.time.format.FormatStyle;
 public class EmailSenderService {
     @Autowired
     private JavaMailSender mailSender;
-
+    private static final String EMAIL_REGEX = "^(?=.{1,64}@)[A-Za-z0-9_-]+(\\.[A-Za-z0-9_-]+)*@[^-][A-Za-z0-9-]+(\\.[A-Za-z0-9-]+)*(\\.[A-Za-z]{2,})$";
     private String bodyTemplate =
                     "Bonjour {ClientName},\n" +
                     "\n" +
-                    "Votre Commande du {orderDate} vient d'être validée par le magazin";
+                    "Votre Commande No {orderId} du {orderDate} vient d'être validée";
 
     private String subjectTemplate = "Your order has been validated";
 
@@ -28,11 +28,17 @@ public class EmailSenderService {
 
         bodyTemplate = bodyTemplate.replace("{ClientName}", order.getClient().getLastName());
         bodyTemplate = bodyTemplate.replace("{orderDate}", order.getOrderDate().format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM)));
+        bodyTemplate = bodyTemplate.replace("{orderDate}", order.getOrderDate().format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM)));
 
         message.setTo(order.getClient().getEmailAddress());
         message.setSubject(subjectTemplate);
         message.setText(bodyTemplate);
 
         mailSender.send(message);
+    }
+
+    public void checkEmail(String email) {
+        if (email != null && !email.matches(EMAIL_REGEX))
+            throw new IllegalArgumentException("Invalid Email Address");
     }
 }
