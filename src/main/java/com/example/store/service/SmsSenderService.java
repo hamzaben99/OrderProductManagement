@@ -25,7 +25,7 @@ public class SmsSenderService {
 
     @Async
     public void sendSms(Order order) {
-        if (twilioConfig.isActive()) {
+        if (twilioConfig.isEnabled()) {
             bodyTemplate = bodyTemplate.replace("{clientName}", order.getClient().getLastName());
             bodyTemplate = bodyTemplate.replace("{orderId}", order.getClient().getId().toString());
             bodyTemplate = bodyTemplate.replace("{orderDate}", order.getOrderDate().format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM)));

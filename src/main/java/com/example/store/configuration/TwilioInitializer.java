@@ -10,7 +10,7 @@ public class TwilioInitializer {
 
     @Autowired
     public TwilioInitializer(TwilioConfiguration twilioConfig) {
-        if (twilioConfig.isActive()) {
+        if (twilioConfig.isEnabled()) {
             this.twilioConfig = twilioConfig;
             Twilio.init(
                     twilioConfig.getSid(),
