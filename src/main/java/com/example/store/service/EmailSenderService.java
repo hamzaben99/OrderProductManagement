@@ -26,8 +26,8 @@ public class EmailSenderService {
     public void sendEmail(Order order) {
         SimpleMailMessage message = new SimpleMailMessage();
 
-        bodyTemplate = bodyTemplate.replace("{ClientName}", order.getClient().getLastName());
-        bodyTemplate = bodyTemplate.replace("{orderDate}", order.getOrderDate().format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM)));
+        bodyTemplate = bodyTemplate.replace("{ClientName}", order.getClient().getFirstName() + order.getClient().getLastName());
+        bodyTemplate = bodyTemplate.replace("{orderId}", order.getId().toString());
         bodyTemplate = bodyTemplate.replace("{orderDate}", order.getOrderDate().format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM)));
 
         message.setTo(order.getClient().getEmailAddress());

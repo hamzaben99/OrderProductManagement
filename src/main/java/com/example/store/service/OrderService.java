@@ -7,12 +7,10 @@ import com.example.store.entity.dto.ClientDto;
 import com.example.store.entity.dto.OrderDto;
 import com.example.store.entity.dto.OrderDtoComplete;
 import com.example.store.entity.dto.ProductQuantity;
+import com.example.store.repository.ClientRepository;
 import com.example.store.repository.OrderRepository;
 import com.example.store.repository.ProductRepository;
-import com.example.store.utils.ClientDtoMapper;
-import com.example.store.utils.NoSuchOrderException;
-import com.example.store.utils.NoSuchProductException;
-import com.example.store.utils.OrderDtoMapper;
+import com.example.store.utils.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -39,7 +37,11 @@ public class OrderService {
     @Autowired
     private EmailSenderService emailSenderService;
     @Autowired
-    private SmsSenderService smsSenderService;
+    private SmsSender smsSender;
+    @Autowired
+    private PhoneNumberFormater phoneNumberFormater;
+    @Autowired
+    private ClientRepository clientRepository;
 
     public List<OrderDtoComplete> getOrders() {
         return orderRepository
@@ -82,7 +84,7 @@ public class OrderService {
     }
 
     public List<OrderDtoComplete> getOrdersByClientPhoneNumber(String phoneNumber) {
-        String validPhoneNumber = smsSenderService.formatPhoneNumber(phoneNumber);
+        String validPhoneNumber = phoneNumberFormater.format(phoneNumber);
         return orderRepository
                 .findByClient_PhoneNumber(validPhoneNumber)
                 .stream()
@@ -128,9 +130,12 @@ public class OrderService {
     @Transactional
     public OrderDtoComplete addOrder(OrderDto order, boolean isPreorder) {
         // Checking phone number and email pattern
-        emailSenderService.checkEmail(order.getClientDto().getEmailAddress());
-        order.getClientDto().setPhoneNumber(smsSenderService.formatPhoneNumber(order.getClientDto().getPhoneNumber()));
+        if (order.getClientDto().getEmailAddress() != null)
+            emailSenderService.checkEmail(order.getClientDto().getEmailAddress());
+        order.getClientDto().setPhoneNumber(phoneNumberFormater.format(order.getClientDto().getPhoneNumber()));
 
+        if (order.getOrderDeliveryDate().isBefore(LocalDate.now()))
+            throw new IllegalArgumentException("Not valid Delivery Date");
         Order orderEntity = orderDtoMapper.mapDtoToEntity(order, isPreorder);
         Set<ProductOrder> productOrders = new HashSet<>();
         for (ProductQuantity product: order.getProducts()) {
@@ -193,12 +198,12 @@ public class OrderService {
         ExecutorService executor;
         if (order.getClient().getEmailAddress() == null) {
             executor = Executors.newSingleThreadExecutor();
-            executor.execute(() -> smsSenderService.sendSms(order));
+            executor.execute(() -> smsSender.sendSms(order));
         }
         else {
             executor = Executors.newFixedThreadPool(2);
             executor.execute(() -> emailSenderService.sendEmail(order));
-            executor.execute(() -> smsSenderService.sendSms(order));
+            executor.execute(() -> smsSender.sendSms(order));
         }
         executor.shutdown();
         return orderDtoMapper.mapEntityToDto(updatedOrder);
@@ -218,7 +223,7 @@ public class OrderService {
             if (order.getClient().getEmailAddress() != null) {
                 executor.execute(() -> emailSenderService.sendEmail(order));
             }
-            executor.execute(() -> smsSenderService.sendSms(order));
+            executor.execute(() -> smsSender.sendSms(order));
         }
         executor.shutdown();
         return updatedOrders.stream().map(orderDtoMapper::mapEntityToDto).toList();
@@ -227,8 +232,9 @@ public class OrderService {
     @Transactional
     public OrderDtoComplete updateOrderClient(Long id, ClientDto client) {
         Order order = orderRepository.findById(id).orElseThrow(() -> new NoSuchOrderException("Order " + id + " doesn't exist"));
+        clientRepository.delete(order.getClient());
         order.setClient(clientDtoMapper.mapDtoToEntity(client));
-        Order updatedOrder = orderRepository.save(order); //todo:
+        Order updatedOrder = orderRepository.save(order);
         return orderDtoMapper.mapEntityToDto(updatedOrder);
     }
 

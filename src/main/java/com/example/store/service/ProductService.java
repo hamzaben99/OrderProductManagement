@@ -8,12 +8,15 @@ import com.example.store.repository.ProductRepository;
 import com.example.store.utils.NoSuchProductException;
 import com.example.store.utils.ProductDtoMapper;
 import javax.transaction.Transactional;
+
+import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
+@Log4j2
 public class ProductService {
     @Autowired
     private ProductRepository productRepository;

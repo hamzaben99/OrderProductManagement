@@ -1,7 +1,11 @@
 package com.example.store.configuration;
 
+import com.example.store.service.NoOpSmsSender;
+import com.example.store.service.SmsSender;
+import com.example.store.service.TwilioSmsSender;
 import com.example.store.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -36,5 +40,24 @@ public class AppConfiguration {
     @Bean
     public ApplicationListener<ContextRefreshedEvent> startupEventListener() {
         return event -> userService.createDefaultAdminIfNotExist();
+    }
+
+    @Bean
+    @ConditionalOnProperty(
+            value="sms.enabled",
+            havingValue = "true",
+            matchIfMissing = false
+    )
+    public SmsSender smsSender() {
+        return new TwilioSmsSender();
+    }
+    @Bean
+    @ConditionalOnProperty(
+            value="sms.enabled",
+            havingValue = "false",
+            matchIfMissing = false
+    )
+    public SmsSender noOpSmsSender() {
+        return new NoOpSmsSender();
     }
 }

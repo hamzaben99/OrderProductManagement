@@ -120,7 +120,7 @@ public class OrderController {
     }
 
     @PutMapping(value = "api/orders/{id}/client")
-    public ResponseEntity<?> updateOrderClient(@PathVariable Long id, ClientDto client) {
+    public ResponseEntity<?> updateOrderClient(@PathVariable Long id,@RequestBody ClientDto client) {
         OrderDtoComplete orderDto = orderService.updateOrderClient(id, client);
         return new ResponseEntity<OrderDtoComplete>(orderDto, HttpStatus.OK);
     }

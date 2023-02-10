@@ -24,20 +24,21 @@ public class WebSecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf().disable()
+                //.headers().frameOptions().disable() // todo: to be deleted
+                //.and()
                 .authorizeHttpRequests()
-                .antMatchers("/h2-console/**", "**/swagger-ui/**").permitAll()
+                .antMatchers("/h2-console/**", "**/swagger-ui/**").permitAll() // todo : to be removed
                 .antMatchers("/api/auth/authenticate").permitAll()
-                .antMatchers("api/auth/changePassword").hasRole("ADMIN")
+                .antMatchers("/api/auth/changePassword").hasRole("ADMIN")
                 .antMatchers(HttpMethod.GET).permitAll()
-                .antMatchers(HttpMethod.POST, "/api/orders**").permitAll()
                 .antMatchers(HttpMethod.POST, "/api/products**").hasRole("ADMIN")
+                .antMatchers(HttpMethod.POST, "/api/orders**").permitAll()
                 .antMatchers(HttpMethod.DELETE, "/api/products**", "/api/orders**").hasRole("ADMIN")
                 .antMatchers(HttpMethod.PUT, "/api/products**", "/api/orders**").hasRole("ADMIN")
                 .anyRequest()
                 .authenticated()
                 .and()
                 .sessionManagement()
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
                 .authenticationProvider(authenticationProvider)

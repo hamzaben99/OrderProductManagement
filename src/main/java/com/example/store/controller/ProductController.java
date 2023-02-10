@@ -35,7 +35,7 @@ public class ProductController {
     }
 
     @PostMapping
-    public ResponseEntity<?> addProduct(@RequestBody ProductDto product){
+    public ResponseEntity<?> addProduct(@RequestBody ProductDto product) {
         ProductDtoComplete productDto = productService.addProduct(product);
         URI location = ServletUriComponentsBuilder
                 .fromCurrentRequest()

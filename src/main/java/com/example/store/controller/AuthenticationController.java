@@ -5,7 +5,6 @@ import com.example.store.entity.dto.PasswordModificationRequest;
 import com.example.store.service.AuthenticationService;
 import com.example.store.entity.dto.AuthenticationRequest;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import org.springframework.web.bind.annotation.*;

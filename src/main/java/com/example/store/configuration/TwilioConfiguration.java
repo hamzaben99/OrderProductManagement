@@ -1,16 +1,19 @@
 package com.example.store.configuration;
 
+import com.example.store.service.NoOpSmsSender;
+import com.example.store.service.SmsSender;
+import com.example.store.service.TwilioSmsSender;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@ConfigurationProperties(prefix = "twilio")
+@ConfigurationProperties(prefix = "sms.twilio")
 public class TwilioConfiguration {
     private String sid;
     private String token;
     private String number;
-    private boolean enabled;
-    private String countryCode;
 
     public TwilioConfiguration(){}
 
@@ -36,21 +39,5 @@ public class TwilioConfiguration {
 
     public void setNumber(String number) {
         this.number = number;
-    }
-
-    public boolean isEnabled() {
-        return enabled;
-    }
-
-    public void setEnabled(boolean active) {
-        this.enabled = active;
-    }
-
-    public String getCountryCode() {
-        return countryCode;
-    }
-
-    public void setCountryCode(String countryCode) {
-        this.countryCode = countryCode;
     }
 }

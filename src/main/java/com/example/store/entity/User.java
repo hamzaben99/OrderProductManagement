@@ -6,8 +6,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import javax.persistence.*;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 
 @Entity
 @Table(name = "users")
@@ -18,19 +17,20 @@ public class User implements UserDetails {
     private String username;
     private String password;
     @Enumerated(EnumType.STRING)
-    private Role role;
+    @ElementCollection(fetch = FetchType.EAGER)
+    private Set<Role> roles = new HashSet<>();
 
     public User() {}
 
-    public User(String username, String password, Role role) {
+    public User(String username, String password, Role... roles) {
         this.username = username;
         this.password = password;
-        this.role = role;
+        this.roles.addAll(Arrays.asList(roles));
     }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority(role.name()));
+        return roles.stream().map(role -> new SimpleGrantedAuthority(role.name())).toList();
     }
 
     public Long getId() {
@@ -41,12 +41,12 @@ public class User implements UserDetails {
         this.id = id;
     }
 
-    public Role getRole() {
-        return role;
+    public Set<Role> getRoles() {
+        return roles;
     }
 
-    public void setRole(Role role) {
-        this.role = role;
+    public void addRole(Role role) {
+        this.roles.add(role);
     }
 
     public void setPassword(String password) {
